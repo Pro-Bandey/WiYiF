@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy New Year ✨ | M Ramzan Ch</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Courgette&family=Playfair+Display:wght@700&family=Orbitron:wght@700&family=Pacifico&display=swap" rel="stylesheet">
+
+<style>
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+}
+
+/* Animated gradient overlay */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(120deg,#ff0080,#7928ca,#2afadf);
+    opacity: .15;
+    animation: hue 10s infinite alternate;
+}
+@keyframes hue { to { filter: hue-rotate(360deg); } }
+
+canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+}
+
+.main {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    text-align: center;
+}
+
+/* TEXT BASE */
+#title {
+    transition: all 1s ease;
+}
+
+/* ===== ANIMATION MODES ===== */
+
+/* 1. Neon Glow */
+.neon {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(48px, 10vw, 120px);
+    text-shadow:
+        0 0 10px #ff3cac,
+        0 0 40px #784ba0,
+        0 0 80px #2b86c5;
+    animation: pulse 2s infinite alternate;
+}
+@keyframes pulse { from { opacity:.8 } to { opacity:1 } }
+
+/* 2. Golden Shine */
+.gold {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(48px, 9vw, 110px);
+    background: linear-gradient(90deg,#fff,#fcb045,#fff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200%;
+    animation: shine 3s infinite;
+}
+@keyframes shine { to { background-position: 200% } }
+
+/* 3. Typewriter */
+.typewriter {
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(40px, 8vw, 100px);
+    border-right: 4px solid #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 0;
+    animation: typing 4s steps(20) forwards, blink .7s infinite;
+}
+@keyframes typing { to { width: 100% } }
+@keyframes blink { 50% { border-color: transparent } }
+
+/* 4. Wave Bounce */
+.wave {
+    font-family: 'Pacifico', cursive;
+    font-size: clamp(48px, 9vw, 110px);
+}
+.wave span {
+    display: inline-block;
+    animation: wave 1.5s infinite;
+}
+.wave span:nth-child(n) { animation-delay: calc(var(--i) * 0.1s); }
+@keyframes wave {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+/* 5. Zoom Spark */
+.zoom {
+    font-family: 'Courgette', cursive;
+    font-size: clamp(48px, 10vw, 120px);
+    animation: zoom 2s ease-in-out infinite alternate;
+}
+@keyframes zoom {
+    from { transform: scale(0.95); opacity:0.7 }
+    to { transform: scale(1.05); opacity:1 }
+}
+
+.subtitle {
+    margin-top: 15px;
+    font-family: 'Courgette', cursive;
+    opacity: .85;
+}
+
+footer {
+    position: absolute;
+    bottom: 15px;
+    font-size: 14px;
+    opacity: .7;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="main">
+    <div id="title" class="neon">Happy New Year 2026 🎆</div>
+    <div class="subtitle">New hopes ✦ New dreams ✦ New beginnings</div>
+    <footer>Made with ❤️ by M Ramzan Ch</footer>
+</div>
+
+<script>
+/* ===== TEXT ANIMATION ROTATOR ===== */
+const title = document.getElementById("title");
+const text = "Happy New Year 2026 🎆";
+
+const modes = [
+    () => title.className = "neon",
+    () => title.className = "gold",
+    () => title.className = "typewriter",
+    () => {
+        title.className = "wave";
+        title.innerHTML = [...text].map((c,i)=>`<span style="--i:${i}">${c}</span>`).join("");
+    },
+    () => title.className = "zoom"
+];
+
+let index = 0;
+
+function changeMode(){
+    title.innerHTML = text;
+    modes[index]();
+    index = (index + 1) % modes.length;
+}
+changeMode();
+setInterval(changeMode, 6000); // 🔁 every 1 minute
+
+/* ===== FIREWORKS BACKGROUND ===== */
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+}
+resize(); addEventListener("resize", resize);
+
+let fireworks = [];
+
+class Firework {
+    constructor(){
+        this.x = Math.random()*canvas.width;
+        this.y = canvas.height;
+        this.target = Math.random()*canvas.height/2;
+        this.color = `hsl(${Math.random()*360},100%,60%)`;
+        this.speed = Math.random()*4+4;
+        this.exploded = false;
+        this.p = [];
+    }
+    update(){
+        if(!this.exploded){
+            this.y -= this.speed;
+            if(this.y < this.target) this.explode();
+        } else this.p.forEach(s=>s.update());
+    }
+    explode(){
+        this.exploded = true;
+        for(let i=0;i<50;i++) this.p.push(new Spark(this.x,this.y,this.color));
+    }
+    draw(){
+        if(!this.exploded){
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x,this.y,2,10);
+        } else this.p.forEach(s=>s.draw());
+    }
+}
+
+class Spark{
+    constructor(x,y,c){
+        this.x=x; this.y=y; this.c=c;
+        this.a=Math.random()*Math.PI*2;
+        this.v=Math.random()*5+2;
+        this.l=60;
+    }
+    update(){
+        this.x+=Math.cos(this.a)*this.v;
+        this.y+=Math.sin(this.a)*this.v;
+        this.l--;
+    }
+    draw(){
+        ctx.globalAlpha=this.l/60;
+        ctx.fillStyle=this.c;
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,2,0,Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha=1;
+    }
+}
+
+(function loop(){
+    ctx.fillStyle="rgba(0,0,0,.25)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    if(Math.random()<0.05) fireworks.push(new Firework());
+    fireworks.forEach((f,i)=>{
+        f.update(); f.draw();
+        if(f.exploded && f.p.every(s=>s.l<=0)) fireworks.splice(i,1);
+    });
+    requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
