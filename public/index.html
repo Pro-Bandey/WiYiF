@@ -1,29 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WiYiF | Premium Digital Invitation</title>
-
+    
     <!-- Third Party Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
     <!-- Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;700;900&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;700;900&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
     <div class="bg-mesh" id="bg-mesh"></div>
     <div class="bg-image" id="bg-image"></div>
     <canvas id="canvas"></canvas>
     <div id="toast"></div>
+    
+    <!-- Hidden YT Player -->
+    <div id="yt-player-container"><div id="yt-player"></div></div>
 
     <!-- AUDIO CONTROLLER -->
     <button class="audio-ctrl hidden" id="audio-ctrl" onclick="toggleAudio()">🎵</button>
@@ -38,16 +38,11 @@
     <div class="modal" id="qr-modal">
         <div class="modal-card">
             <h3 style="margin-bottom:10px; font-weight:800;">Your WiYiF Link is Ready!</h3>
-            <p style="font-size: 0.8rem; margin-bottom: 15px; color: #555;">Scan or copy the link below. Expires in 30
-                days.</p>
+            <p style="font-size: 0.8rem; margin-bottom: 15px; color: #555;">Scan or copy the link below. Expires in 30 days.</p>
             <div id="qrcode" style="display:flex; justify-content:center; margin-bottom: 15px;"></div>
-            <input type="text" id="share-link-input" readonly
-                style="background:#f1f1f1; color:#000; text-align:center; font-size:0.8rem;">
-            <button class="btn-main"
-                onclick="navigator.clipboard.writeText(document.getElementById('share-link-input').value); showToast('Link Copied!');"
-                style="width:100%; margin-bottom:10px;">📋 Copy Link</button>
-            <button class="modal-close"
-                onclick="document.getElementById('qr-modal').classList.remove('show')">Close</button>
+            <input type="text" id="share-link-input" readonly style="background:#f1f1f1; color:#000; text-align:center; font-size:0.8rem;">
+            <button class="btn-main" onclick="navigator.clipboard.writeText(document.getElementById('share-link-input').value); showToast('Link Copied!');" style="width:100%; margin-bottom:10px;">📋 Copy Link</button>
+            <button class="modal-close" onclick="document.getElementById('qr-modal').classList.remove('show')">Close</button>
         </div>
     </div>
 
@@ -95,23 +90,22 @@
         <textarea id="in-desc" placeholder="Event Details" rows="3"></textarea>
         <textarea id="in-itin" placeholder="Itinerary (e.g. Barat: 8PM, Dinner: 10PM)" rows="2"></textarea>
         <input type="text" id="in-dc" placeholder="Dress Code (Optional)">
-
-        <div class="section-label">Links & Gifts</div>
+        
+        <div class="section-label">Links & Map</div>
         <input type="text" id="in-ph" placeholder="WhatsApp RSVP No. (923...)">
         <input type="text" id="in-loc" placeholder="Google Maps Link">
-        <input type="text" id="in-gift" placeholder="Salami/Gift Link (Raast/SadaPay/NayaPay)">
+        
+        <div class="section-label">Background & Music</div>
         <input type="text" id="in-bgi" placeholder="Background Image URL (Optional)">
-        <input type="text" id="in-mu" placeholder="Background Audio MP3 URL">
+        <input type="text" id="in-mu" placeholder="YouTube Link or MP3 URL">
 
         <div class="section-label">Date & Time</div>
         <input type="datetime-local" id="in-dt">
 
         <div class="section-label">Aesthetics</div>
         <div style="display: flex; gap:10px; margin-bottom: 10px;">
-            <div style="flex:1"><label style="font-size:0.7rem; opacity:0.6">Accent/Text Color</label><input
-                    type="color" id="in-ac"></div>
-            <div style="flex:1"><label style="font-size:0.7rem; opacity:0.6">Background Color</label><input type="color"
-                    id="in-bg"></div>
+            <div style="flex:1"><label style="font-size:0.7rem; opacity:0.6">Accent/Text Color</label><input type="color" id="in-ac"></div>
+            <div style="flex:1"><label style="font-size:0.7rem; opacity:0.6">Background Color</label><input type="color" id="in-bg"></div>
         </div>
         <label style="font-size:0.7rem; opacity:0.6">Card Blur Level</label>
         <input type="range" id="in-bl" min="0" max="40" value="20">
@@ -125,7 +119,7 @@
             <div class="subtitle" id="d-st">Loading...</div>
             <h1 class="title" id="d-t">The Celebration</h1>
             <p class="description" id="d-desc">Please wait while the invitation loads.</p>
-
+            
             <div class="itinerary hidden" id="d-itin"></div>
             <div class="dress-code hidden" id="d-dc"></div>
 
@@ -139,8 +133,6 @@
             <div class="btn-group" data-html2canvas-ignore>
                 <a href="#" target="_blank" class="btn-main hidden" id="rsvp-wa">💬 RSVP</a>
                 <a href="#" target="_blank" class="btn-main hidden" id="loc-btn">📍 Map</a>
-                <a href="#" target="_blank" class="btn-main hidden" id="gift-btn"
-                    style="background: linear-gradient(45deg, #10b981, #059669); color:white;">🎁 Send Gift</a>
                 <button class="btn-main btn-outline hidden" id="cal-btn" onclick="downloadICS()">📅 Calendar</button>
                 <button class="btn-main btn-outline" id="img-btn" onclick="downloadAsImage()">📸 Save Image</button>
             </div>
@@ -148,5 +140,4 @@
     </div>
 </body>
 <script src="app.js"></script>
-
 </html>

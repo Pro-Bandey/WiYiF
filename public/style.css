@@ -213,7 +213,7 @@ body {
     letter-spacing: -1px;
     margin-bottom: 0.5rem;
     background: var(--accent-gradient);
-    background-clip: text;
+    -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2));
 }
@@ -351,6 +351,16 @@ body {
     background: var(--primary);
     color: #000;
 }
+
+#yt-player-container {
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: -9999px;
+    overflow: hidden;
+}
+
+/* Hidden YouTube iframe */
 
 /* SIDEBAR EDITOR */
 #ui-toggle {

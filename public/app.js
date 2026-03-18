@@ -1,11 +1,10 @@
-
 /**
  * WIYIF GLOBAL STATE ENGINE
  */
 let state = {
     t: "The Grand Celebration", st: "You are cordially invited", desc: "Join us for an evening of elegance and joy.",
     itin: "", ac: "#d4af37", bg: "#0a0505", bl: 20, ff: "serif", pt: 0, cal: "none",
-    dc: "", ph: "", loc: "", gift: "", bgi: "", dt: "", mu: ""
+    dc: "", ph: "", loc: "", bgi: "", dt: "", mu: ""
 };
 
 const PRESETS = {
@@ -17,32 +16,82 @@ const PRESETS = {
     birthday: { t: "Birthday Bash", st: "Let's Celebrate", desc: "Another year older, another year bolder! Come celebrate with drinks, food, and fun.", itin: "Cake Cutting: 9:00 PM\nParty All Night", ac: "#00f2ff", bg: "#05001a", ff: "sans", pt: 0, cal: "none", dc: "Smart Casual", bgi: "" }
 };
 
+/**
+ * YOUTUBE & AUDIO ENGINE
+ */
+let ytPlayer = null;
+let ytReady = false;
 let myAudio = null;
+let audioType = 'none'; // 'yt' or 'mp3'
+let isAudioPlaying = false;
+
+// Called automatically by YouTube IFrame API script when it loads
+function onYouTubeIframeAPIReady() {
+    ytReady = true;
+    setupAudio(); // Attempt setup if data is already loaded
+}
+
+function getYTVideoId(url) {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+}
+
+function setupAudio() {
+    if (!state.mu) return;
+    const ytId = getYTVideoId(state.mu);
+
+    if (ytId) {
+        audioType = 'yt';
+        if (ytReady) {
+            if (!ytPlayer) {
+                ytPlayer = new YT.Player('yt-player', {
+                    height: '0', width: '0', videoId: ytId,
+                    playerVars: { 'autoplay': 0, 'loop': 1, 'playlist': ytId },
+                    events: { 'onReady': () => { /* Ready to play on click */ } }
+                });
+            } else if (typeof ytPlayer.loadVideoById === 'function') {
+                ytPlayer.loadVideoById(ytId);
+                ytPlayer.pauseVideo(); // Wait for user tap
+            }
+        }
+    } else {
+        audioType = 'mp3';
+        if (!myAudio) { myAudio = new Audio(state.mu); myAudio.loop = true; myAudio.volume = 0.5; }
+        else { myAudio.src = state.mu; }
+    }
+}
+
+function toggleAudio() {
+    if (audioType === 'yt' && ytPlayer && typeof ytPlayer.playVideo === 'function') {
+        if (isAudioPlaying) { ytPlayer.pauseVideo(); isAudioPlaying = false; }
+        else { ytPlayer.playVideo(); isAudioPlaying = true; }
+    } else if (audioType === 'mp3' && myAudio) {
+        if (isAudioPlaying) { myAudio.pause(); isAudioPlaying = false; }
+        else { myAudio.play(); isAudioPlaying = true; }
+    }
+    document.getElementById('audio-ctrl').innerText = isAudioPlaying ? "⏸️" : "▶️";
+}
 
 /**
  * WAX SEAL INTRO SCREEN
  */
 function openEnvelope(e) {
-    // Burst Particles
     createBurst(e.clientX, e.clientY, true);
-
-    // Hide Intro Screen
     document.getElementById('intro-screen').classList.add('hidden-intro');
 
-    // Start Audio if exists
-    if (state.mu && !myAudio) {
-        myAudio = new Audio(state.mu);
-        myAudio.loop = true; myAudio.volume = 0.5;
-        myAudio.play().catch(() => { });
+    // Start Audio
+    if (state.mu) {
         document.getElementById('audio-ctrl').classList.remove('hidden');
         document.getElementById('audio-ctrl').innerText = "⏸️";
-    }
-}
+        isAudioPlaying = true;
 
-function toggleAudio() {
-    if (!myAudio) return;
-    if (myAudio.paused) { myAudio.play(); document.getElementById('audio-ctrl').innerText = "⏸️"; }
-    else { myAudio.pause(); document.getElementById('audio-ctrl').innerText = "▶️"; }
+        if (audioType === 'yt' && ytPlayer && typeof ytPlayer.playVideo === 'function') {
+            ytPlayer.playVideo();
+        } else if (audioType === 'mp3' && myAudio) {
+            myAudio.play().catch(() => { });
+        }
+    }
 }
 
 /**
@@ -50,25 +99,21 @@ function toggleAudio() {
  */
 function syncStateToUI() {
     document.getElementById('d-t').innerText = state.t;
-    document.getElementById('intro-text').innerText = state.t; // Sync Intro screen title
+    document.getElementById('intro-text').innerText = state.t;
     document.getElementById('d-st').innerText = state.st;
     document.getElementById('d-desc').innerText = state.desc;
 
-    // Calligraphy Toggle
     const calEl = document.getElementById('d-cal');
     if (state.cal === 'bismillah') { calEl.innerText = "﷽"; calEl.classList.remove('hidden'); }
     else if (state.cal === 'mashallah') { calEl.innerText = "ما شاء الله"; calEl.classList.remove('hidden'); }
     else { calEl.classList.add('hidden'); }
 
-    // Itinerary
     if (state.itin) { document.getElementById('d-itin').innerText = state.itin; document.getElementById('d-itin').classList.remove('hidden'); }
     else document.getElementById('d-itin').classList.add('hidden');
 
-    // Dress Code
     if (state.dc) { document.getElementById('d-dc').innerText = "Dress Code: " + state.dc; document.getElementById('d-dc').classList.remove('hidden'); }
     else document.getElementById('d-dc').classList.add('hidden');
 
-    // Aesthetics
     document.documentElement.style.setProperty('--primary', state.ac);
     document.documentElement.style.setProperty('--bg', state.bg);
     document.documentElement.style.setProperty('--blur', `${state.bl}px`);
@@ -77,21 +122,16 @@ function syncStateToUI() {
     if (state.bgi) document.getElementById('bg-image').style.backgroundImage = `url(${state.bgi})`;
     else document.getElementById('bg-image').style.backgroundImage = 'none';
 
-    // Links & Buttons
     const btnWa = document.getElementById('rsvp-wa');
     const btnLoc = document.getElementById('loc-btn');
-    const btnGift = document.getElementById('gift-btn');
     const btnCal = document.getElementById('cal-btn');
 
     if (state.ph) { btnWa.classList.remove('hidden'); btnWa.href = `https://wa.me/${state.ph.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi! RSVP for ' + state.t)}`; } else btnWa.classList.add('hidden');
     if (state.loc) { btnLoc.classList.remove('hidden'); btnLoc.href = state.loc; } else btnLoc.classList.add('hidden');
-    if (state.gift) { btnGift.classList.remove('hidden'); btnGift.href = state.gift; } else btnGift.classList.add('hidden');
-
     if (state.dt) { document.getElementById('countdown').classList.remove('hidden'); btnCal.classList.remove('hidden'); }
     else { document.getElementById('countdown').classList.add('hidden'); btnCal.classList.add('hidden'); }
 
-    // Sync Inputs
-    const inputs = ['t', 'st', 'desc', 'itin', 'dc', 'ph', 'loc', 'gift', 'bgi', 'dt', 'ac', 'bg', 'bl', 'ff', 'pt', 'cal', 'mu'];
+    const inputs = ['t', 'st', 'desc', 'itin', 'dc', 'ph', 'loc', 'bgi', 'dt', 'ac', 'bg', 'bl', 'ff', 'pt', 'cal', 'mu'];
     inputs.forEach(key => { const el = document.getElementById(`in-${key}`); if (el) el.value = state[key]; });
 
     updateLiveURL();
@@ -136,7 +176,6 @@ async function saveToDatabase() {
         }
         document.getElementById('share-link-input').value = targetUrl;
 
-        // Show QR Code
         const qrContainer = document.getElementById("qrcode");
         qrContainer.innerHTML = "";
         new QRCode(qrContainer, { text: targetUrl, width: 180, height: 180, colorDark: "#000", colorLight: "#fff" });
@@ -159,8 +198,8 @@ async function loadData() {
         try { state = { ...state, ...JSON.parse(decodeURIComponent(atob(base64))) }; } catch (e) { }
     }
     syncStateToUI();
+    setupAudio(); // Set up audio after data loads
 
-    // If Editor opens URL, skip intro screen for easier editing
     if (window.location.href.includes('localhost') || params.has('edit')) {
         document.getElementById('intro-screen').classList.add('hidden-intro');
     }
@@ -179,7 +218,7 @@ window.downloadICS = () => {
 };
 
 /**
- * MULTI-PARTICLE ENGINE (Fireworks, Petals, Stars)
+ * MULTI-PARTICLE ENGINE
  */
 const canvas = document.getElementById('canvas'); const ctx = canvas.getContext('2d'); let particles = [];
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -190,13 +229,13 @@ class Particle {
         this.x = x; this.y = y; this.color = color; this.type = parseInt(type);
         this.a = 1; this.angle = Math.random() * Math.PI * 2;
 
-        if (this.type === 0 || isBurst) { // Fireworks / Intro Burst
+        if (this.type === 0 || isBurst) {
             this.v = { x: (Math.random() - 0.5) * 15, y: (Math.random() - 0.5) * 15 };
             this.f = 0.92; this.g = 0.05; this.decay = 0.015;
-        } else if (this.type === 1) { // Rose Petals
+        } else if (this.type === 1) {
             this.v = { x: (Math.random() - 0.5) * 2, y: Math.random() * 2 + 1 };
             this.f = 0.99; this.g = 0.01; this.decay = 0.005;
-        } else { // Stars
+        } else {
             this.v = { x: (Math.random() - 0.5) * 0.5, y: (Math.random() - 0.5) * 0.5 - 0.5 };
             this.f = 1; this.g = 0; this.decay = 0.008;
         }
@@ -266,8 +305,13 @@ setInterval(() => {
  */
 document.getElementById('ui-toggle').onclick = () => document.getElementById('sidebar').classList.toggle('open');
 
-const inputKeys = ['t', 'st', 'desc', 'itin', 'dc', 'ph', 'loc', 'gift', 'bgi', 'dt', 'ac', 'bg', 'bl', 'ff', 'pt', 'cal', 'mu'];
+const inputKeys = ['t', 'st', 'desc', 'itin', 'dc', 'ph', 'loc', 'bgi', 'dt', 'ac', 'bg', 'bl', 'ff', 'pt', 'cal', 'mu'];
 inputKeys.forEach(key => {
+    document.getElementById(`in-${key}`).addEventListener('change', (e) => {
+        state[key] = ['bl', 'pt'].includes(key) ? Number(e.target.value) : e.target.value;
+        syncStateToUI();
+        if (key === 'mu') setupAudio(); // reload audio if URL changes
+    });
     document.getElementById(`in-${key}`).addEventListener('input', (e) => {
         state[key] = ['bl', 'pt'].includes(key) ? Number(e.target.value) : e.target.value; syncStateToUI();
     });
@@ -275,7 +319,7 @@ inputKeys.forEach(key => {
 
 document.getElementById('btn-save').onclick = saveToDatabase;
 
-window.applyPreset = (p) => { state = { ...state, ...PRESETS[p] }; syncStateToUI(); };
+window.applyPreset = (p) => { state = { ...state, ...PRESETS[p] }; syncStateToUI(); setupAudio(); };
 
 function showToast(msg) {
     const t = document.getElementById('toast'); t.innerText = msg;
