@@ -1,6 +1,7 @@
 /* CSS VARIABLES & RESET */
 :root {
     --primary: #d4af37;
+    --primary-h: #b3890d;
     --bg: #050505;
     --card-bg: rgba(255, 255, 255, 0.05);
     --text: #ffffff;
@@ -213,7 +214,7 @@ body {
     letter-spacing: -1px;
     margin-bottom: 0.5rem;
     background: var(--accent-gradient);
-    -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2));
 }
@@ -367,7 +368,7 @@ body {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 2000;
+    z-index: 2001;
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.2);
     width: 50px;
@@ -393,7 +394,7 @@ body {
     height: 100%;
     background: rgba(10, 10, 12, 0.95);
     backdrop-filter: blur(20px);
-    z-index: 2001;
+    z-index: 2000;
     padding: 30px;
     overflow-y: auto;
     transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -535,4 +536,25 @@ input[type="range"] {
 
 .hidden {
     display: none !important;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+    margin-block: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius:var(--radius);
+    cursor: grab;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: var(--primary-h);
+    cursor: grabbing;
 }
