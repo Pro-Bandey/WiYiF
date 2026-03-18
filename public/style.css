@@ -1,3 +1,4 @@
+/* CSS VARIABLES & RESET */
 :root {
     --primary: #d4af37;
     --bg: #050505;
@@ -32,7 +33,7 @@ body {
     transition: background 0.5s ease;
 }
 
-/* Typography Classes */
+/* Typography */
 .ff-sans {
     font-family: var(--font-sans);
 }
@@ -53,7 +54,15 @@ body {
     line-height: 1.8;
 }
 
-/* BACKGROUND MESH & IMAGE */
+.calligraphy {
+    font-family: var(--font-arabic);
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-weight: 400;
+}
+
+/* BACKGROUND */
 .bg-mesh {
     position: fixed;
     top: 0;
@@ -98,7 +107,60 @@ body {
     top: 0;
     left: 0;
     pointer-events: none;
-    z-index: 1;
+    z-index: 5;
+}
+
+/* WAX SEAL INTRO SCREEN */
+.intro-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1s ease, transform 1s ease;
+    backdrop-filter: blur(20px);
+}
+
+.intro-screen.hidden-intro {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.1);
+}
+
+.wax-seal {
+    width: 100px;
+    height: 100px;
+    background: var(--accent-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.wax-seal:hover {
+    transform: scale(1.1);
+}
+
+.intro-text {
+    font-family: var(--font-serif);
+    margin-bottom: 30px;
+    font-size: 1.5rem;
+    letter-spacing: 3px;
+    color: var(--primary);
 }
 
 /* 3D SCENE & CARD */
@@ -108,6 +170,17 @@ body {
     max-width: 600px;
     transition: transform 0.1s ease-out;
     will-change: transform;
+    opacity: 0;
+    transform: translateY(50px);
+    animation: slideUp 1s forwards;
+    animation-delay: 0.5s;
+}
+
+@keyframes slideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .card {
@@ -121,7 +194,7 @@ body {
     box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
     position: relative;
     overflow: hidden;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow-y: auto;
 }
 
@@ -158,6 +231,16 @@ body {
     margin-bottom: 1.5rem;
     font-size: 1.1rem;
     opacity: 0.9;
+}
+
+.itinerary {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .dress-code {
@@ -243,6 +326,32 @@ body {
     text-transform: uppercase;
 }
 
+/* AUDIO CONTROLLER */
+.audio-ctrl {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 45px;
+    height: 45px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2000;
+    backdrop-filter: blur(10px);
+    transition: 0.3s;
+}
+
+.audio-ctrl:hover {
+    transform: scale(1.1);
+    background: var(--primary);
+    color: #000;
+}
+
 /* SIDEBAR EDITOR */
 #ui-toggle {
     position: fixed;
@@ -274,7 +383,7 @@ body {
     height: 100%;
     background: rgba(10, 10, 12, 0.95);
     backdrop-filter: blur(20px);
-    z-index: 1999;
+    z-index: 2001;
     padding: 30px;
     overflow-y: auto;
     transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -348,7 +457,7 @@ input[type="range"] {
     accent-color: var(--primary);
 }
 
-/* MODALS */
+/* MODALS & TOAST */
 .modal {
     position: fixed;
     top: 0;
@@ -364,7 +473,6 @@ input[type="range"] {
     opacity: 0;
     pointer-events: none;
     transition: 0.3s;
-    flex-direction: column;
     padding: 20px;
 }
 

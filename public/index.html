@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WiYiF | Digital Celebration & Invitation</title>
+    <title>WiYiF | Premium Digital Invitation</title>
 
     <!-- Third Party Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -16,7 +16,6 @@
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-
 </head>
 
 <body>
@@ -25,6 +24,15 @@
     <div class="bg-image" id="bg-image"></div>
     <canvas id="canvas"></canvas>
     <div id="toast"></div>
+
+    <!-- AUDIO CONTROLLER -->
+    <button class="audio-ctrl hidden" id="audio-ctrl" onclick="toggleAudio()">🎵</button>
+
+    <!-- INTRO WAX SEAL SCREEN -->
+    <div class="intro-screen" id="intro-screen">
+        <div class="intro-text" id="intro-text">You're Invited</div>
+        <div class="wax-seal" onclick="openEnvelope(event)">Tap to<br>Open</div>
+    </div>
 
     <!-- QR Code / Share Modal -->
     <div class="modal" id="qr-modal">
@@ -43,11 +51,11 @@
         </div>
     </div>
 
-    <button id="ui-toggle">⚙️</button>
+    <button id="ui-toggle">⚙️ Editor</button>
 
     <aside class="sidebar" id="sidebar">
         <h2>WiYiF Editor</h2>
-        <p style="opacity: 0.5; font-size: 0.8rem;">Create. Share. Celebrate. (Ctrl+Z to Undo)</p>
+        <p style="opacity: 0.5; font-size: 0.8rem;">Create. Share. Celebrate.</p>
 
         <div class="section-label">Cultural Themes</div>
         <div class="preset-grid">
@@ -74,15 +82,24 @@
             </select>
         </div>
 
+        <div class="section-label">Islamic Header</div>
+        <select id="in-cal">
+            <option value="none">None</option>
+            <option value="bismillah">﷽ (Bismillah)</option>
+            <option value="mashallah">ما شاء الله (Mashallah)</option>
+        </select>
+
         <div class="section-label">Content</div>
         <input type="text" id="in-t" placeholder="Event Title">
-        <input type="text" id="in-st" placeholder="Subtitle (e.g. Bismillah)">
+        <input type="text" id="in-st" placeholder="Subtitle">
         <textarea id="in-desc" placeholder="Event Details" rows="3"></textarea>
+        <textarea id="in-itin" placeholder="Itinerary (e.g. Barat: 8PM, Dinner: 10PM)" rows="2"></textarea>
         <input type="text" id="in-dc" placeholder="Dress Code (Optional)">
 
-        <div class="section-label">Features & Links</div>
+        <div class="section-label">Links & Gifts</div>
         <input type="text" id="in-ph" placeholder="WhatsApp RSVP No. (923...)">
         <input type="text" id="in-loc" placeholder="Google Maps Link">
+        <input type="text" id="in-gift" placeholder="Salami/Gift Link (Raast/SadaPay/NayaPay)">
         <input type="text" id="in-bgi" placeholder="Background Image URL (Optional)">
         <input type="text" id="in-mu" placeholder="Background Audio MP3 URL">
 
@@ -104,10 +121,13 @@
 
     <div class="scene" id="scene">
         <main class="card" id="main-card">
+            <div class="calligraphy hidden" id="d-cal"></div>
             <div class="subtitle" id="d-st">Loading...</div>
             <h1 class="title" id="d-t">The Celebration</h1>
             <p class="description" id="d-desc">Please wait while the invitation loads.</p>
-            <div class="dress-code hidden" id="d-dc">Dress Code: Traditional</div>
+
+            <div class="itinerary hidden" id="d-itin"></div>
+            <div class="dress-code hidden" id="d-dc"></div>
 
             <div class="countdown hidden" id="countdown">
                 <div class="cd-box"><span class="cd-val" id="cd-d">00</span><span class="cd-lbl">Days</span></div>
@@ -119,6 +139,8 @@
             <div class="btn-group" data-html2canvas-ignore>
                 <a href="#" target="_blank" class="btn-main hidden" id="rsvp-wa">💬 RSVP</a>
                 <a href="#" target="_blank" class="btn-main hidden" id="loc-btn">📍 Map</a>
+                <a href="#" target="_blank" class="btn-main hidden" id="gift-btn"
+                    style="background: linear-gradient(45deg, #10b981, #059669); color:white;">🎁 Send Gift</a>
                 <button class="btn-main btn-outline hidden" id="cal-btn" onclick="downloadICS()">📅 Calendar</button>
                 <button class="btn-main btn-outline" id="img-btn" onclick="downloadAsImage()">📸 Save Image</button>
             </div>
