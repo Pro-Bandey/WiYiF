@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Elite Invite | Premium Digital Experience</title>
+    <!-- Third Party QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* CSS VARIABLES & RESET */
+        :root {
+            --primary: #00f2ff; --bg: #050505; --card-bg: rgba(255, 255, 255, 0.05);
+            --text: #ffffff; --blur: 20px; --radius: 30px;
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
+            --accent-gradient: linear-gradient(45deg, var(--primary), #7000ff);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font); background: var(--bg); color: var(--text);
+            overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center;
+            perspective: 1000px; transition: background 0.5s ease;
+        }
+
+        body.rtl { direction: rtl; font-family: 'Jameel Noori Nastaleeq', 'Tahoma', sans-serif; }
+
+        /* BACKGROUND MESH & IMAGE */
+        .bg-mesh {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+            background: linear-gradient(45deg, var(--bg), #1a1a1a, var(--bg));
+            background-size: 400% 400%; animation: gradientBG 15s ease infinite;
+        }
+        .bg-image {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background-size: cover; background-position: center; opacity: 0.4; transition: 0.5s;
+        }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        #canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1; }
+
+        /* 3D SCENE & CARD */
+        .scene { z-index: 10; width: 90%; max-width: 600px; transition: transform 0.1s ease-out; will-change: transform; }
+        .card {
+            background: var(--card-bg); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius);
+            padding: 3rem 2rem; text-align: center; box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden; max-height: 90vh; overflow-y: auto;
+        }
+
+        .title {
+            font-size: clamp(2rem, 8vw, 3.5rem); font-weight: 900; letter-spacing: -1px; margin-bottom: 0.5rem;
+            background: var(--accent-gradient); background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.3));
+        }
+
+        .subtitle { text-transform: uppercase; letter-spacing: 4px; font-size: 0.9rem; margin-bottom: 1.5rem; opacity: 0.8; }
+        .description { line-height: 1.8; margin-bottom: 2rem; font-size: 1.1rem; opacity: 0.9; }
+
+        /* BUTTONS */
+        .btn-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn-main {
+            background: var(--accent-gradient); color: white; padding: 12px 20px; border-radius: 50px;
+            text-decoration: none; font-weight: bold; font-size: 0.85rem; transition: 0.3s;
+            border: none; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 242, 255, 0.4); }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; box-shadow: none; }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+        /* COUNTDOWN */
+        .countdown { display: flex; justify-content: center; gap: 15px; margin-bottom: 2rem; }
+        .cd-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; min-width: 70px; border: 1px solid rgba(255,255,255,0.05); }
+        .cd-val { display: block; font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+        .cd-lbl { font-size: 0.6rem; opacity: 0.6; text-transform: uppercase; }
+
+        /* SIDEBAR EDITOR */
+        #ui-toggle {
+            position: fixed; top: 20px; right: 20px; z-index: 2000; background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 50%;
+            cursor: pointer; backdrop-filter: blur(10px); color: white; font-size: 1.5rem; transition: 0.3s;
+        }
+        #ui-toggle:hover { transform: rotate(90deg) scale(1.1); }
+
+        .sidebar {
+            position: fixed; top: 0; right: -400px; width: 100%; max-width: 400px; height: 100%;
+            background: rgba(10, 10, 12, 0.95); backdrop-filter: blur(20px); z-index: 1999;
+            padding: 30px; overflow-y: auto; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar.open { right: 0; }
+
+        .section-label { font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin: 25px 0 10px; letter-spacing: 1px; }
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .preset-btn { background: #1a1a1a; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .preset-btn:hover { background: #2a2a2a; border-color: var(--primary); }
+
+        input, select, textarea {
+            width: 100%; background: #111; border: 1px solid #333; color: white;
+            padding: 12px; border-radius: 8px; margin-bottom: 10px; outline: none; transition: 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        input[type="color"] { padding: 2px; height: 40px; cursor: pointer; }
+        input[type="range"] { padding: 0; background: transparent; accent-color: var(--primary); }
+
+        /* QR MODAL */
+        .qr-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px); z-index: 3000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.3s; flex-direction: column;
+        }
+        .qr-modal.show { opacity: 1; pointer-events: all; }
+        .qr-card { background: white; padding: 20px; border-radius: 20px; text-align: center; color: black; }
+        .qr-close { margin-top: 20px; background: #222; color: white; padding: 10px 30px; border-radius: 50px; cursor: pointer; border:none; }
+
+        /* TOAST */
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--primary); color: #000; padding: 12px 30px; border-radius: 50px;
+            font-weight: bold; z-index: 3000; opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh" id="bg-mesh"></div>
+    <div class="bg-image" id="bg-image"></div>
+    <canvas id="canvas"></canvas>
+    
+    <div id="toast"></div>
+
+    <!-- QR Code Modal -->
+    <div class="qr-modal" id="qr-modal">
+        <div class="qr-card">
+            <h3 style="margin-bottom:15px; font-weight:800;">Scan to Open</h3>
+            <div id="qrcode"></div>
+        </div>
+        <button class="qr-close" onclick="document.getElementById('qr-modal').classList.remove('show')">Close</button>
+    </div>
+
+    <button id="ui-toggle">⚙️</button>
+
+    <aside class="sidebar" id="sidebar">
+        <h2>Editor (Auto-Saves)</h2>
+        <p style="opacity: 0.5; font-size: 0.8rem;">Changes auto-update link. Use Ctrl+Z to undo.</p>
+
+        <div class="section-label">Quick Themes</div>
+        <div class="preset-grid">
+            <button class="preset-btn" onclick="applyPreset('royal')">👑 Royal Gold</button>
+            <button class="preset-btn" onclick="applyPreset('cyber')">🕹️ Cyberpunk</button>
+            <button class="preset-btn" onclick="applyPreset('wedding')">💍 Wedding</button>
+            <button class="preset-btn" onclick="applyPreset('minimal')">⚪ Minimal</button>
+        </div>
+
+        <div class="section-label">Language / RTL</div>
+        <select id="in-ln">
+            <option value="en">English</option>
+            <option value="ur">Urdu / Arabic (RTL)</option>
+        </select>
+
+        <div class="section-label">Content</div>
+        <input type="text" id="in-t" placeholder="Event Title">
+        <input type="text" id="in-st" placeholder="Subtitle">
+        <textarea id="in-desc" placeholder="Event Details" rows="3"></textarea>
+        
+        <div class="section-label">Features & Links</div>
+        <input type="text" id="in-ph" placeholder="WhatsApp RSVP No.">
+        <input type="email" id="in-em" placeholder="Email RSVP">
+        <input type="text" id="in-loc" placeholder="Google Maps Link">
+        <input type="text" id="in-bgi" placeholder="Background Image URL (Optional)">
+        <input type="text" id="in-mu" placeholder="Background Audio MP3 URL">
+
+        <div class="section-label">Date & Time</div>
+        <input type="datetime-local" id="in-dt">
+
+        <div class="section-label">Aesthetics</div>
+        <div style="display: flex; gap:10px; margin-bottom: 10px;">
+            <div style="flex:1"><label style="font-size:0.7rem; opacity:0.6">Accent</label><input type="color" id="in-ac"></div>
+            <div style="flex:1"><label style="font-size:0.7rem; opacity:0.6">Background</label><input type="color" id="in-bg"></div>
+        </div>
+        <label style="font-size:0.7rem; opacity:0.6">Card Blur</label>
+        <input type="range" id="in-bl" min="0" max="40" value="20">
+        <label style="font-size:0.7rem; opacity:0.6">Fireworks Density</label>
+        <input type="range" id="in-fw" min="0" max="10" value="3">
+
+        <button class="btn-main" id="btn-save" style="width: 100%; margin-top: 20px;">💾 Save & Get QR Code</button>
+        <p style="font-size: 0.7rem; opacity: 0.5; text-align: center; margin-top:10px;">Links expire securely after 30 days.</p>
+    </aside>
+
+    <div class="scene" id="scene">
+        <main class="card" id="main-card">
+            <div class="subtitle" id="d-st">Loading...</div>
+            <h1 class="title" id="d-t">The Celebration</h1>
+            <p class="description" id="d-desc">Please wait while the invitation loads.</p>
+
+            <div class="countdown hidden" id="countdown">
+                <div class="cd-box"><span class="cd-val" id="cd-d">00</span><span class="cd-lbl">Days</span></div>
+                <div class="cd-box"><span class="cd-val" id="cd-h">00</span><span class="cd-lbl">Hrs</span></div>
+                <div class="cd-box"><span class="cd-val" id="cd-m">00</span><span class="cd-lbl">Min</span></div>
+                <div class="cd-box"><span class="cd-val" id="cd-s">00</span><span class="cd-lbl">Sec</span></div>
+            </div>
+
+            <div class="btn-group">
+                <a href="#" target="_blank" class="btn-main hidden" id="rsvp-wa">💬 WhatsApp</a>
+                <a href="#" target="_blank" class="btn-main btn-outline hidden" id="rsvp-em">✉️ Email</a>
+                <a href="#" target="_blank" class="btn-main hidden" id="loc-btn">📍 Map</a>
+                <button class="btn-main btn-outline hidden" id="cal-btn" onclick="downloadICS()">📅 Add to Calendar</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        /**
+         * GLOBAL STATE ENGINE & HISTORY (UNDO/REDO)
+         */
+        let state = {
+            t: "The Grand Celebration", st: "You are cordially invited", desc: "We are thrilled to invite you to join us for an evening of elegance, joy, and memories.",
+            ac: "#00f2ff", bg: "#050505", bl: 20, fw: 3, ln: "en",
+            ph: "", em: "", loc: "", bgi: "", dt: "", mu: ""
+        };
+
+        const PRESETS = {
+            royal: { t: "The Royal Gala", st: "Elegance & Honor", ac: "#ffd700", bg: "#0a0600", desc: "A night of luxury awaits your presence.", bl: 10, fw: 2, ln: "en", bgi: "" },
+            cyber: { t: "CYBERPUNK 2077", st: "System Overload", ac: "#ff003c", bg: "#000b1e", desc: "Access the grid. Sensory experience incoming.", bl: 30, fw: 8, ln: "en", bgi: "" },
+            wedding: { t: "Sarah & Mark", st: "Together Forever", ac: "#ff8da1", bg: "#150e10", desc: "We are starting our journey together.", bl: 20, fw: 4, ln: "en", bgi: "" },
+            minimal: { t: "Dinner Gathering", st: "Casual Friday", ac: "#ffffff", bg: "#111111", desc: "Simple gathering. Good food. Good people.", bl: 40, fw: 0, ln: "en", bgi: "" }
+        };
+
+        // History Stack for Ctrl+Z
+        let historyStack =[];
+        function saveHistory() {
+            if(historyStack.length > 20) historyStack.shift(); // keep last 20 actions
+            historyStack.push(JSON.stringify(state));
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'z' && historyStack.length > 0) {
+                state = JSON.parse(historyStack.pop());
+                syncStateToUI();
+                showToast("Undo Successful");
+            }
+        });
+
+        /**
+         * UI RENDERER
+         */
+        function syncStateToUI() {
+            document.getElementById('d-t').innerText = state.t;
+            document.getElementById('d-st').innerText = state.st;
+            document.getElementById('d-desc').innerText = state.desc;
+
+            document.documentElement.style.setProperty('--primary', state.ac);
+            document.documentElement.style.setProperty('--bg', state.bg);
+            document.documentElement.style.setProperty('--blur', `${state.bl}px`);
+            
+            if(state.bgi) document.getElementById('bg-image').style.backgroundImage = `url(${state.bgi})`;
+            else document.getElementById('bg-image').style.backgroundImage = 'none';
+
+            if(state.ln === 'ur') document.body.classList.add('rtl');
+            else document.body.classList.remove('rtl');
+
+            // Button Visibility & Links
+            const btnWa = document.getElementById('rsvp-wa');
+            const btnEm = document.getElementById('rsvp-em');
+            const btnLoc = document.getElementById('loc-btn');
+            const btnCal = document.getElementById('cal-btn');
+            
+            if(state.ph) { btnWa.classList.remove('hidden'); btnWa.href = `https://wa.me/${state.ph.replace(/[^0-9]/g, '')}?text=${encodeURIComponent('Hi! RSVP for ' + state.t)}`; } 
+            else btnWa.classList.add('hidden');
+
+            if(state.em) { btnEm.classList.remove('hidden'); btnEm.href = `mailto:${state.em}?subject=${encodeURIComponent('RSVP: ' + state.t)}`; } 
+            else btnEm.classList.add('hidden');
+
+            if(state.loc) { btnLoc.classList.remove('hidden'); btnLoc.href = state.loc; } 
+            else btnLoc.classList.add('hidden');
+
+            if(state.dt) {
+                document.getElementById('countdown').classList.remove('hidden');
+                btnCal.classList.remove('hidden');
+            } else {
+                document.getElementById('countdown').classList.add('hidden');
+                btnCal.classList.add('hidden');
+            }
+
+            // Sync Inputs
+            const inputs =['t','st','desc','ph','em','loc','bgi','dt','ac','bg','bl','fw','ln','mu'];
+            inputs.forEach(key => { const el = document.getElementById(`in-${key}`); if(el) el.value = state[key]; });
+
+            updateLiveURL();
+        }
+
+        /**
+         * DATABASE & URL SYNC
+         */
+        function updateLiveURL() {
+            const encoded = btoa(encodeURIComponent(JSON.stringify(state)));
+            window.history.replaceState({}, '', `?s=${encoded}`);
+        }
+
+        let qrCodeInstance = null;
+        async function saveToDatabase() {
+            const btn = document.getElementById('btn-save');
+            btn.innerText = "⏳ Saving..."; btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/save', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state)
+                });
+                
+                let targetUrl = window.location.href; // Default to long URL if DB fails
+                if (response.ok) {
+                    const data = await response.json();
+                    targetUrl = `${window.location.origin}?id=${data.id}`;
+                    window.history.pushState({}, '', `?id=${data.id}`);
+                }
+
+                await navigator.clipboard.writeText(targetUrl);
+                showToast("✅ Saved & Link Copied!");
+                
+                // Generate QR Code
+                const qrContainer = document.getElementById("qrcode");
+                qrContainer.innerHTML = ""; // clear old
+                qrCodeInstance = new QRCode(qrContainer, {
+                    text: targetUrl, width: 200, height: 200, colorDark : "#000000", colorLight : "#ffffff"
+                });
+                document.getElementById('qr-modal').classList.add('show');
+
+            } catch (err) {
+                console.error("DB Error", err);
+                showToast("⚠️ DB Error. Long Link Copied Instead!");
+            } finally {
+                btn.innerText = "💾 Save & Get QR Code"; btn.disabled = false;
+            }
+        }
+
+        async function loadData() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id'); const base64 = params.get('s');
+
+            if (id) {
+                try {
+                    const res = await fetch(`/api/get?id=${id}`);
+                    if (res.ok) { const dbState = await res.json(); state = { ...state, ...dbState }; } 
+                    else showToast("❌ Invitation Expired or Not Found");
+                } catch(e) { console.error("DB Load Error", e); }
+            } else if (base64) {
+                try { state = { ...state, ...JSON.parse(decodeURIComponent(atob(base64))) }; } catch(e) {}
+            }
+            saveHistory(); // initial state saved
+            syncStateToUI();
+        }
+
+        /**
+         * ICS CALENDAR GENERATOR
+         */
+        window.downloadICS = () => {
+            if(!state.dt) return;
+            const sDate = new Date(state.dt).toISOString().replace(/-|:|\.\d+/g, '');
+            const eDate = new Date(new Date(state.dt).getTime() + 2*60*60*1000).toISOString().replace(/-|:|\.\d+/g, ''); // 2 hours long
+            const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${sDate}\nDTEND:${eDate}\nSUMMARY:${state.t}\nDESCRIPTION:${state.desc}\nLOCATION:${state.loc}\nEND:VEVENT\nEND:VCALENDAR`;
+            const blob = new Blob([ics], { type: 'text/calendar' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'invitation.ics'; a.click();
+        };
+
+        /**
+         * FIREWORKS & 3D ENGINE
+         */
+        const canvas = document.getElementById('canvas'); const ctx = canvas.getContext('2d'); let particles =[];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; this.color = color; this.v = { x: (Math.random()-0.5)*8, y: (Math.random()-0.5)*8 };
+                this.a = 1; this.f = 0.96;
+            }
+            draw() { ctx.globalAlpha = this.a; ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI*2); ctx.fill(); }
+            update() { this.v.x *= this.f; this.v.y *= this.f; this.v.y += 0.05; this.x += this.v.x; this.y += this.v.y; this.a -= 0.015; }
+        }
+
+        function createBurst(x, y) { for(let i=0; i<30; i++) particles.push(new Particle(x, y, state.ac)); }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear instead of fill for transparent overlay
+            if(Math.random() < (state.fw / 100)) createBurst(Math.random()*canvas.width, Math.random()*canvas.height);
+            particles.forEach((p, i) => { if(p.a > 0) { p.update(); p.draw(); } else particles.splice(i, 1); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // 3D Parallax
+        const scene = document.getElementById('scene');
+        window.addEventListener('mousemove', (e) => {
+            if(window.innerWidth < 768) return;
+            scene.style.transform = `rotateY(${(window.innerWidth / 2 - e.pageX) / 30}deg) rotateX(${(window.innerHeight / 2 - e.pageY) / 30}deg)`;
+        });
+        window.addEventListener('mousedown', (e) => { if(!e.target.closest('#sidebar') && !e.target.closest('.qr-modal')) createBurst(e.clientX, e.clientY); });
+
+        /**
+         * COUNTDOWN LOGIC
+         */
+        setInterval(() => {
+            if(!state.dt) return;
+            const diff = new Date(state.dt) - new Date();
+            if (diff <= 0) { document.getElementById('countdown').innerHTML = `<div style="color:var(--primary); font-weight:bold; font-size:1.5rem;">EVENT STARTED</div>`; return; }
+            document.getElementById('cd-d').innerText = Math.floor(diff / 864e5).toString().padStart(2, '0');
+            document.getElementById('cd-h').innerText = Math.floor((diff % 864e5) / 36e5).toString().padStart(2, '0');
+            document.getElementById('cd-m').innerText = Math.floor((diff % 36e5) / 6e4).toString().padStart(2, '0');
+            document.getElementById('cd-s').innerText = Math.floor((diff % 6e4) / 1000).toString().padStart(2, '0');
+        }, 1000);
+
+        /**
+         * EVENT LISTENERS & INIT
+         */
+        let audioInit = false;
+        window.addEventListener('click', () => {
+            if(!audioInit && state.mu) { const a = new Audio(state.mu); a.loop=true; a.volume=0.5; a.play().catch(e=>console.log("Audio blocked")); audioInit=true; }
+        }, { once: true });
+
+        document.getElementById('ui-toggle').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+        
+        const inputKeys =['t','st','desc','ph','em','loc','bgi','dt','ac','bg','bl','fw','ln','mu'];
+        inputKeys.forEach(key => {
+            document.getElementById(`in-${key}`).addEventListener('change', (e) => { // change instead of input to avoid excessive history
+                saveHistory();
+                state[key] = key === 'bl' || key === 'fw' ? Number(e.target.value) : e.target.value;
+                syncStateToUI();
+            });
+            // Also update live on input, but don't save to history stack for every letter
+            document.getElementById(`in-${key}`).addEventListener('input', (e) => {
+                state[key] = key === 'bl' || key === 'fw' ? Number(e.target.value) : e.target.value;
+                syncStateToUI();
+            });
+        });
+
+        document.getElementById('btn-save').onclick = saveToDatabase;
+
+        window.applyPreset = (p) => { saveHistory(); state = { ...state, ...PRESETS[p] }; syncStateToUI(); };
+
+        function showToast(msg) {
+            const t = document.getElementById('toast'); t.innerText = msg;
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        window.onload = loadData;
+
+    </script>
+</body>
+</html>
